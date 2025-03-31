@@ -1,0 +1,132 @@
+# This workflow automates the build, testing, and publication of a Python distribution to PyPI and TestPyPI.
+
+name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
+
+# Trigger the workflow on push events to the 'main' branch and tags starting with 'v'.
+on:
+  push:
+    tags:
+    - v*
+    branches:
+    - main
+    # Uncomment the below section to enable testing package builds on pull requests to 'main'.
+    # pull_request:
+    #   branches:
+    #   - main
+
+jobs:
+  # Job to build the Python distribution.
+  build:
+    name: Build distribution 📦
+    runs-on: ubuntu-latest
+    outputs:
+        package_name: ${{ steps.build_artifacts.outputs.package_name }}
+        package_version: ${{ steps.build_artifacts.outputs.package_version }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+        fetch-tags: true
+        fetch-depth: 0
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+    - name: Install pypa/build
+      run: python3 -m pip install build hatchling hatch-vcs --user
+    - name: Build a binary wheel and a source tarball
+      id: build_artifacts
+      run: |
+        python3 -m build
+        # In case you decide to use chatchling with pyproject.toml only:
+        # package_name=$(hatchling metadata name)
+        # package_version=$(hatchling version)
+        package_name=$(python setup.py --name)
+        package_version=$(python setup.py --name)
+        echo "package_name=$package_name" >> $GITHUB_OUTPUT
+        echo "package_version=$package_version" >> $GITHUB_OUTPUT
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+
+  # Job to publish the distribution to PyPI on tag pushes.
+  publish-to-pypi:
+    name: Publish Python 🐍 distribution 📦 to PyPI
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/${{ needs.build.outputs.package_name }}
+    permissions:
+      id-token: write  # Required for trusted publishing
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish distribution 📦 to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+
+  # Job to sign the distribution with Sigstore and upload it to GitHub Release.
+  github-release:
+    name: Sign the Python 🐍 distribution 📦 with Sigstore and upload them to GitHub Release
+    needs: [publish-to-pypi]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required for making GitHub Releases
+      id-token: write  # Required for Sigstore
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Sign the dists with Sigstore
+      uses: sigstore/gh-action-sigstore-python@v3.0.0
+      with:
+        inputs: |
+          ./dist/*.tar.gz
+          ./dist/*.whl
+    - name: Delete the stub of Release
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        gh release delete "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes
+    - name: Create GitHub Release
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        gh release create "$GITHUB_REF_NAME" --title "Release $GITHUB_REF_NAME" --generate-notes --latest --repo "$GITHUB_REPOSITORY"
+    - name: Upload artifact signatures to GitHub Release
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        gh release upload "$GITHUB_REF_NAME" dist/** --repo "$GITHUB_REPOSITORY"
+
+  # Job to publish the distribution to TestPyPI on pushes to the 'main' branch.
+  publish-to-testpypi:
+    name: Publish Python 🐍 distribution 📦 to TestPyPI
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/${{ needs.build.outputs.package_name }}
+    permissions:
+      id-token: write  # Required for trusted publishing
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish distribution 📦 to TestPyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
+        skip-existing: true
+        verbose: true

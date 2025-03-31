@@ -1,0 +1,91 @@
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--strict-markers --doctest-modules --doctest-glob='*.rst' --ignore=setup.py"
+doctest_optionflags = [
+    "NORMALIZE_WHITESPACE",
+    "IGNORE_EXCEPTION_DETAIL",
+    "ELLIPSIS",
+]
+norecursedirs = [
+    ".*",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg-info",
+    "htmlcov",
+    "doc",
+]
+filterwarnings = []
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = ["doc"]
+
+[tool.ruff.lint]
+select = [
+    "F",  # pyflakes
+    "E",  # pycodestyle
+    "W",  # pycodestyle
+    "UP",  # pyupgrade
+    "YTT",  # flake8-2020
+    "B",  # flake8-bugbear
+    "T10",  # flake8-debugger
+    "C4",  # flake8-comprehensions
+    "G",  # flake8-logging-format
+    "ISC",  # flake8-implicit-str-concat
+    "ICN",  # flake8-import-conventions
+]
+ignore = []
+
+[tool.black]
+line-length = 88
+target-version = ["py39"]
+extend-exclude = "doc"
+
+[tool.mypy]
+warn_return_any = "True"
+warn_unused_configs = "True"
+strict_optional = "True"
+ignore_missing_imports = "True"
+disallow_any_unimported = "True"
+check_untyped_defs = "True"
+disallow_untyped_defs = "True"
+no_implicit_optional = "True"
+show_error_codes = "True"
+warn_unused_ignores = "True"
+
+# --- Buildsystem based on setuptools +  pyproject.toml : ---
+
+[build-system]
+requires = ["setuptools>=71", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.setuptools_scm]
+write_to = "package/_version.py"
+write_to_template = "__version__ = \"{version}\"\n"
+
+
+# --- Alternative with hatchling with pyproject.toml only: ---
+#[project]
+#name = "Squarer"
+#dynamic = ["version"]
+
+#[build-system]
+#requires = ["hatchling>=1.24.2", "hatch-vcs>=0.3.0"]
+#build-backend = "hatchling.build"
+
+#[tool.hatch.version]
+#source = "vcs"
+
+#[tool.hatch.version.raw-options]
+#version_scheme = "python-simplified-semver"
+#local_scheme = "no-local-version"
+#parentdir_prefix_version = "v"
+#git_describe_command = ["git", "describe", "--dirty", "--tags", "--long", "--match", "v*"]
+
+#[tool.hatch.build.hooks.vcs]
+#version-file = "package/_version.py"
+
+# -------------------------------------------------------------
