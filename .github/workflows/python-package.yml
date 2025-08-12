@@ -28,7 +28,7 @@ jobs:
 
     name: ${{ matrix.os }} - ${{ matrix.python-version }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Get history and tags for SCM versioning to work
       run: |
         git fetch --prune --unshallow
@@ -52,7 +52,7 @@ jobs:
     needs: [test]
     name: Build Python packages
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Get history and tags for SCM versioning to work
       run: |
         git fetch --prune --unshallow
