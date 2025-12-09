@@ -16,16 +16,10 @@ class CloudMetadata(ModelUtilities):
     """
 
     def __init__(self):
-        current_file = Path(__file__)
-        project_root = current_file
 
-        while project_root.parent != project_root:
-            project_root = project_root.parent
-            csv_path = project_root / "azure_instances.csv"
-            if csv_path.exists():
-                break
-        else:
-            csv_path = Path("azure_instances.csv")
+        import backend.src.services.carbon_service.impact_framework.files as files_module
+        files_dir = Path(files_module.__file__).parent
+        csv_path = files_dir / "azure_instances.csv"
 
         config = {
             "filepath": str(csv_path),
