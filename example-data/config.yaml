@@ -1,0 +1,37 @@
+# Example Configuration for Carbon Engine with Sample Data
+# This configuration uses the local reader to process the example VM metrics
+carmen_daemon:
+  # SOURCE: Read VM metrics from local example data
+  source:
+    type: local
+
+    # Files to process - choose one or more:
+    # Option 1: Simple example (2 VMs, 3 hours each)
+    file_names:
+      - "vm_metrics_simple.csv"
+
+    # Option 2: Full monthly data (6 VMs, January)
+    # file_names:
+    #   - "vm_metrics_2024_01.csv"
+
+    # Option 3: Multi-month data (January + February)
+    # file_names:
+    #   - "vm_metrics_2024_01.csv"
+    #   - "vm_metrics_2024_02.csv"
+
+    # Local filesystem configuration
+    local:
+      # Path to the example data directory
+      # Using relative path from project root
+      source_path: "vm-metrics"
+
+      # Or use absolute path:
+      # source_path: "/home/user/carbon-engine/example-data/vm-metrics"
+
+  # UPLOAD: Write carbon reports to local output directory
+  upload:
+    type: local
+    # Local filesystem configuration
+    local:
+      # Output directory for carbon reports
+      upload_path: "./output"
