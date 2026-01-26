@@ -14,7 +14,7 @@ httpretty==1.1.4
 httpx==0.26.0
 azure-storage-blob==12.19.0
 azure-identity==1.15.0
-coverage==7.4.4
+coverage==7.12.0
 robotframework==7.0
 robotframework-requests==0.9.7
 pyarrow==16.1.0
